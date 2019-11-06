@@ -1,0 +1,14 @@
+{
+  "name": "Reflect.me Extension",
+  "version": "1.0",
+  "description": "Partner Extension for Reflect.me",
+  "permissions": ["tabs", "storage", "activeTab", "contextMenus"],
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "manifest_version": 2
+}
