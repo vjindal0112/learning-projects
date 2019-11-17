@@ -1,6 +1,6 @@
 
 
-var history = [];
+var websites = [];
 
 WebsiteItem.prototype.getWebsiteFromUrl = function(url) {
   var posStart = url.indexOf("www.");
@@ -17,12 +17,49 @@ WebsiteItem.prototype.getWebsiteFromUrl = function(url) {
   return website;
 };
 
-function WebsiteItem(url, tabIDs, oTime) {
+function WebsiteItem(url, tabID, oTime) {
     this.website = this.getWebsiteFromUrl(url);
-    this.tabIDs = tabIDs
+    this.tabIDs = [tabID]
     this.oTime = oTime;
     this.totalTime = 0;
 }
+
+WebsiteItem.prototype.hasID = function(tabID) {
+  if(tabIDs.includes(tabID)) {
+    return true;
+  }
+  return false;
+};
+
+WebsiteItem.prototype.addID = function(tabID) {
+  if(!tabID) {
+    return
+  } else {
+    if(!this.tabIDs.includes(tabID)) {
+      this.tabIDs.push(tabID);
+    }
+  }
+};
+
+WebsiteItem.prototype.isWebsite = function(url) {
+  if(this.website == this.getWebsiteFromUrl(url)) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+WebsiteItem.prototype.removeID = function(tabID, currTime) {
+  this.totalTime += currTime - this.oTime;
+  this.oTime = -1;
+};
+
+WebsiteItem.prototype.equals = function(websiteItemOther) {
+  if (this.website == websiteItemOther.website) {
+    return true;
+  }
+  return false;
+};
 
 
 chrome.runtime.onInstalled.addListener(function() {
@@ -96,6 +133,21 @@ chrome.history.onVisited.addListener(function(tabDetails) {
   //   console.log(history.join(", \n"));
   // }
 
+  // HistoryItem
+  // id: gives unique identifier for **history entry** not tab
+
+
   var temp = new WebsiteItem(tabDetails.url, tabDetails.id, new Date());
-  console.log(temp);
+  var alreadyExists = false;
+  for(var i = 0; i < websites.length; i++) {
+    if(websites[i].equals(temp)) {
+      console.log("We here: " + tabDetails.id);
+      websites[i].addID(tabDetails.id);
+      alreadyExists = true;
+    }
+  }
+  if(!alreadyExists) {
+    websites.push(temp);
+  }
+  console.log(websites);
 });
