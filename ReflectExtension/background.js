@@ -25,7 +25,7 @@ function WebsiteItem(url, tabID, oTime) {
 }
 
 WebsiteItem.prototype.hasID = function(tabID) {
-  if(tabIDs.includes(tabID)) {
+  if(this.tabIDs.includes(tabID)) {
     return true;
   }
   return false;
@@ -41,6 +41,10 @@ WebsiteItem.prototype.addID = function(tabID) {
   }
 };
 
+WebsiteItem.prototype.setoTime = function(time) {
+  this.oTime = time;
+}
+
 WebsiteItem.prototype.isWebsite = function(url) {
   if(this.website == this.getWebsiteFromUrl(url)) {
     return true;
@@ -52,6 +56,13 @@ WebsiteItem.prototype.isWebsite = function(url) {
 WebsiteItem.prototype.removeID = function(tabID, currTime) {
   this.totalTime += currTime - this.oTime;
   this.oTime = -1;
+  function arrayRemove(arr, value) {
+
+   return arr.filter(function(ele){
+       return ele != value;
+   });
+  }
+  this.tabIDs = arrayRemove(this.tabIDs, tabID);
 };
 
 WebsiteItem.prototype.equals = function(websiteItemOther) {
@@ -59,6 +70,10 @@ WebsiteItem.prototype.equals = function(websiteItemOther) {
     return true;
   }
   return false;
+};
+
+WebsiteItem.prototype.print = function() {
+  console.log(this.website + " ||\t" + this.tabIDs.join(", ") + " |\t" + this.totalTime);
 };
 
 
@@ -103,12 +118,61 @@ chrome.runtime.onInstalled.addListener(function() {
  //
  // });
 
+function printWebsites() {
+  for(var i = 0; i < websites.length; i++) {
+    websites[i].print();
+  }
+}
+
 chrome.tabs.onActivated.addListener(function(tabDetails) {
   // tabDetails is an object
+  var tabID = tabDetails.tabId;
+
+  // TODO ***
+  // maybe only need single tabID in WebsiteItem?
+  // there is only ever one active tab. That is the only one that needs to be kept track of.
+  // this might greatly simplify my code as well.
 
 });
 
-chrome.tabs.onRemoved.addListener(function(tabId, removeInfo) {
+chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
+  for(var i = 0; i < websites.length; i++) {
+    if(websites[i].hasID(tabID)) {
+      websites[i].removeID(tabID, new Date());
+    }
+  }
+  // printWebsites(); TODO
+  console.log(tabID);
+
+});
+
+chrome.tabs.onCreated.addListener(function(tab) {
+  // var temp = new WebsiteItem(tab.url, tab.id, new Date());
+  console.log(tab);
+});
+
+chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
+  if(changeInfo.url) {
+    var temp = new WebsiteItem(changeInfo.url, tab.id, new Date());
+    var alreadyExists = false;
+    for(var i = 0; i < websites.length; i++) {
+      if(websites[i].hasID(tab.id)) {
+        websites[i].removeID(tab.id, new Date());
+      }
+      if(websites[i].equals(temp)) {
+        websites[i].addID(tab.id);
+        websites[i].setoTime(new Date());
+        alreadyExists = true;
+      }
+    }
+    if(!alreadyExists) {
+      websites.push(temp);
+    }
+    // printWebsites(); TODO
+  }
+  // console.log("New changeInfo");
+  // console.log(changeInfo + ", \n" + changeInfo.url);
+  console.log(changeInfo);
 
 });
 
@@ -137,17 +201,17 @@ chrome.history.onVisited.addListener(function(tabDetails) {
   // id: gives unique identifier for **history entry** not tab
 
 
-  var temp = new WebsiteItem(tabDetails.url, tabDetails.id, new Date());
-  var alreadyExists = false;
-  for(var i = 0; i < websites.length; i++) {
-    if(websites[i].equals(temp)) {
-      console.log("We here: " + tabDetails.id);
-      websites[i].addID(tabDetails.id);
-      alreadyExists = true;
-    }
-  }
-  if(!alreadyExists) {
-    websites.push(temp);
-  }
-  console.log(websites);
+  // var temp = new WebsiteItem(tabDetails.url, tabDetails.id, new Date());
+  // var alreadyExists = false;
+  // for(var i = 0; i < websites.length; i++) {
+  //   if(websites[i].equals(temp)) {
+  //     console.log("We here: " + tabDetails.id);
+  //     websites[i].addID(tabDetails.id);
+  //     alreadyExists = true;
+  //   }
+  // }
+  // if(!alreadyExists) {
+  //   websites.push(temp);
+  // }
+  // console.log(websites);
 });
