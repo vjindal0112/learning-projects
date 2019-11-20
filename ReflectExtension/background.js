@@ -135,6 +135,12 @@ chrome.tabs.onActivated.addListener(function(tabDetails) {
 
 });
 
+function getCurrUrl() {
+  chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+      return tabs[0].url;
+  });
+}
+
 chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
   for(var i = 0; i < websites.length; i++) {
     if(websites[i].hasID(tabID)) {
