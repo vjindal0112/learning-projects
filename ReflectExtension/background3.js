@@ -62,8 +62,21 @@ WebsiteItem.prototype.equals = function(websiteItemOther) {
 };
 
 WebsiteItem.prototype.print = function() {
-  console.log(this.website + " ||\t" + this.tabID + " |\t" + this.totalTime + " |\t" + this.active);
+  console.log(this.website + " ||\t" + this.tabID + " |\t" + this.totalTime);
 };
+
+WebsiteItem.prototype.isActive = function() {
+  return this.tabID != -1;
+};
+
+
+
+// WebsiteItem definition ends
+///////////////////////////______________________________________////////////////////////////
+// Event Listeners begin
+
+
+
 
 
 chrome.runtime.onInstalled.addListener(function() {
@@ -80,41 +93,38 @@ function printWebsites() {
   }
 }
 
-var activeUrl;
-chrome.tabs.onActivated.addListener(function(tabDetails) {
-  // tabDetails is an object
-  var tabID = tabDetails.tabId;
-  getCurrUrl();
-  console.log(activeUrl);
-  if(activeUrl) {
-    var temp = new WebsiteItem(activeUrl, tabID, new Date());
+function updateWebsiteItem(newTabID) {
+  chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+    var url = tabs[0].url;
+    var temp = new WebsiteItem(url, newTabID, new Date());
+    var alreadyExists = false;
     for(var i = 0; i < websites.length; i++) {
+      if(websites[i].isActive()) {
+        websites[i].clearID(new Date()); // old tabID = -1, old oTime = -1, old totalTime += time
+      }
       if(websites[i].equals(temp)) {
-        websites[i].setID(tabID, new Date());
-      } else if(websites[i].tabID != -1) {
-        websites[i].clearID(new Date());
+        websites[i].setID(newTabID, new Date()); // oTime = currTime, tabID = currTabID
+        alreadyExists = true;
       }
     }
-  }
-  printWebsites();
-
-});
-
-function getCurrUrl() { // TODO: doesn't work
-  chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
-    console.log(tabs[0].url);
-    setActiveUrl(tabs[0].url);
+    if(!alreadyExists) {
+      websites.push(temp);
+    }
+    printWebsites();
   });
 }
 
-function setActiveUrl(url) {
-  activeUrl =  url;
-}
+
+chrome.tabs.onActivated.addListener(function(tabDetails) {
+  // tabDetails is an object
+  updateWebsiteItem(tabDetails.tabId);
+
+});
 
 chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
   for(var i = 0; i < websites.length; i++) {
     if(websites[i].isID(tabID)) {
-      websites[i].clearID(new Date());
+      websites[i].clearID(new Date()); // old tabID = -1, old oTime = -1, old totalTime += time
     }
   }
   printWebsites();
@@ -124,29 +134,20 @@ chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
 chrome.tabs.onCreated.addListener(function(tab) {
   // var temp = new WebsiteItem(tab.url, tab.id, new Date());
   // console.log(tab);
+  var temp = new WebsiteItem(tab.url, tab.id, new Date());
+  var alreadyExists = false;
+  for(var i = 0; i < websites.length; i++) {
+    if(websites[i].equals(temp)) {
+      websites[i].setID(tab.id, new Date());
+      alreadyExists = true;
+    }
+  }
+  if(!alreadyExists) {
+    websites.push(temp);
+  }
+  printWebsites();
 });
 
 chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
-  if(changeInfo.url) {
-    var temp = new WebsiteItem(changeInfo.url, tab.id, new Date());
-    var alreadyExists = false;
-    for(var i = 0; i < websites.length; i++) {
-      if(websites[i].tabID != -1) {
-        websites[i].clearID(new Date());
-      }
-      if(websites[i].equals(temp)) {
-        // console.log("---------------------------------------");
-        // console.log(websites[i].website);
-        // console.log(temp.website);
-        // console.log((websites[i].website == temp.website));
-        websites[i].setID(tab.id, new Date());
-        alreadyExists = true;
-      }
-    }
-    if(!alreadyExists) {
-      websites.push(temp);
-    }
-    printWebsites();
-  }
-
+  updateWebsiteItem(tab.id);
 });
