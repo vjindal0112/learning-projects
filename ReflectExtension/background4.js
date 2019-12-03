@@ -151,3 +151,39 @@ chrome.tabs.onCreated.addListener(function(tab) {
 chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
   updateWebsiteItem(tab.id);
 });
+
+
+//////// Writing Data Firebase /////////
+
+function writeData(userId, name, email, imageUrl) {
+  firebase.database().ref('users/' + userId).set({
+
+  });
+}
+
+
+
+
+
+
+///////////////////////// Firebase OAuth Stuff /////////////////////////
+
+var config = {
+  apiKey: 'AIzaSyBLXHpOZoGgWJipoCaGoR3ZXUktVObXaNQ',
+  databaseURL: 'https://test-6a995.firebaseio.com',
+  storageBucket: 'test-6a995.appspot.com'
+};
+firebase.initializeApp(config);
+var db = firebase.database();
+
+
+function initApp() {
+  // Listen for auth state changes.
+  firebase.auth().onAuthStateChanged(function(user) {
+    console.log('User state change detected from the Background script of the Chrome Extension:', user);
+  });
+}
+
+window.onload = function() {
+  initApp();
+};
