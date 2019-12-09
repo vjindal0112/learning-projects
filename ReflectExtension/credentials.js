@@ -1,9 +1,11 @@
 // TODO(DEVELOPER): Change the values below using values from the initialization snippet: Firebase Console > Overview > Add Firebase to your web app.
 // Initialize Firebase
+
+// using Reflectme database
 var config = {
-  apiKey: 'AIzaSyBLXHpOZoGgWJipoCaGoR3ZXUktVObXaNQ',
-  databaseURL: 'https://test-6a995.firebaseio.com',
-  storageBucket: 'test-6a995.appspot.com'
+  apiKey: 'AIzaSyAXLZRCJb7YTB-l6yqJAGZGOaIn9zSDPJQ',
+  databaseURL: 'https://reflect-me-mhacks.firebaseio.com',
+  storageBucket: 'reflect-me-mhacks.appspot.com'
 };
 firebase.initializeApp(config);
 

@@ -1,6 +1,11 @@
 
 
 var websites = [];
+var email = "";
+var userID;
+var displayName;
+var photoURL;
+var name;
 
 WebsiteItem.prototype.getWebsiteFromUrl = function(url) {
   var posStart = url.indexOf("www.");
@@ -52,6 +57,9 @@ WebsiteItem.prototype.clearID = function(currTime) {
   this.totalTime += Math.round((currTime - this.oTime)/1000.0);
   this.oTime = -1;
   this.tabID = -1;
+  if(this.website != "") {
+    writeWebsiteData(userID, this.website, this.totalTime);
+  }
 };
 
 WebsiteItem.prototype.equals = function(websiteItemOther) {
@@ -155,10 +163,41 @@ chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
 
 //////// Writing Data Firebase /////////
 
-function writeData(userId, name, email, imageUrl) {
-  firebase.database().ref('users/' + userId).set({
+// function writeUserData(userID, name, email, photoURL) {
+//   firebase.database().ref('users/' + userID).set({
+//     email: email,
+//     photoURL: photoURL,
+//     name: name
+//   });
+// }
 
-  });
+function writeWebsiteData(userID, website, time) {
+  firebase.database().ref('chrome/' + userID + '/websiteTime/' + website).set({
+    time: time
+  })
+}
+
+function createUser(userID, name, email, photoURL, created_at) {
+  let id = name.replace(/ .*/, "");
+  id = id.toLowerCase() + Math.floor(Math.random() * 90000);
+  firebase.database()
+    .ref("users/" + userID)
+    .once("value", function(snapshot) {
+      var exists = snapshot.val() !== null;
+      if(exists) {
+        firebase.database().ref('users/' + userID).update({
+          photoURL: photoURL
+        });
+      } else {
+        firebase.database().ref('users/' + userID).set({
+          created_at: created_at,
+          email_address: email,
+          id: id,
+          username: name,
+          photoURL: photoURL
+        });
+      }
+    });
 }
 
 
@@ -168,10 +207,11 @@ function writeData(userId, name, email, imageUrl) {
 
 ///////////////////////// Firebase OAuth Stuff /////////////////////////
 
+// using Reflectme database
 var config = {
-  apiKey: 'AIzaSyBLXHpOZoGgWJipoCaGoR3ZXUktVObXaNQ',
-  databaseURL: 'https://test-6a995.firebaseio.com',
-  storageBucket: 'test-6a995.appspot.com'
+  apiKey: 'AIzaSyAXLZRCJb7YTB-l6yqJAGZGOaIn9zSDPJQ',
+  databaseURL: 'https://reflect-me-mhacks.firebaseio.com',
+  storageBucket: 'reflect-me-mhacks.appspot.com'
 };
 firebase.initializeApp(config);
 var db = firebase.database();
@@ -181,6 +221,12 @@ function initApp() {
   // Listen for auth state changes.
   firebase.auth().onAuthStateChanged(function(user) {
     console.log('User state change detected from the Background script of the Chrome Extension:', user);
+    name = user.displayName;
+    email = user.email;
+    photoURL = user.photoURL;
+    userID = user.uid;
+    created_at = user.metadata.creationTime;
+    createUser(userID, name, email, photoURL, created_at);
   });
 }
 
