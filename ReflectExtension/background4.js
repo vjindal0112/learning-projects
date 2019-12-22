@@ -96,6 +96,9 @@ chrome.runtime.onInstalled.addListener(function() {
 });
 
 function printWebsites() {
+  console.log("/////////////////////");
+  console.log("");
+  console.log("/////////////////////");
   for(var i = 0; i < websites.length; i++) {
     websites[i].print();
   }
@@ -161,6 +164,9 @@ chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
 });
 
 
+
+
+
 //////// Writing Data Firebase /////////
 
 // function writeUserData(userID, name, email, photoURL) {
@@ -199,9 +205,6 @@ function createUser(userID, name, email, photoURL, created_at) {
       }
     });
 }
-
-
-
 
 
 
