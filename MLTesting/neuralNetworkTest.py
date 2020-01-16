@@ -35,11 +35,7 @@ class Neural_Network(object):
         return 1/(1+np.exp(-s))
 
     def sigmoidPrime(self, s):
-        return self.sigmoid(s) * (1 - self.sigmoid(s))
-
-
-
-    # return s*(1-s)
+        return s*(1-s)
 
     def backward(self, X, y, o):
         self.o_error = y - o
